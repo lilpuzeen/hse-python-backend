@@ -134,7 +134,6 @@ def test_get_cart(request, cart: int, not_empty: bool) -> None:
 )
 def test_get_cart_list(query: dict[str, Any], status_code: int):
 	response = client.get("/cart", params=query)
-
 	assert response.status_code == status_code
 
 	if status_code == HTTPStatus.OK:
