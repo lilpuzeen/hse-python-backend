@@ -5,23 +5,26 @@ import warnings
 
 from . import ping_pb2 as ping__pb2
 
-GRPC_GENERATED_VERSION = '1.66.1'
+GRPC_GENERATED_VERSION = "1.66.1"
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
 try:
     from grpc._utilities import first_version_is_lower
-    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
+
+    _version_not_supported = first_version_is_lower(
+        GRPC_VERSION, GRPC_GENERATED_VERSION
+    )
 except ImportError:
     _version_not_supported = True
 
 if _version_not_supported:
     raise RuntimeError(
-        f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in ping_pb2_grpc.py depends on'
-        + f' grpcio>={GRPC_GENERATED_VERSION}.'
-        + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
-        + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
+        f"The grpc package installed is at version {GRPC_VERSION},"
+        + f" but the generated code in ping_pb2_grpc.py depends on"
+        + f" grpcio>={GRPC_GENERATED_VERSION}."
+        + f" Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}"
+        + f" or downgrade your generated code using grpcio-tools<={GRPC_VERSION}."
     )
 
 
@@ -35,15 +38,17 @@ class ExampleStub(object):
             channel: A grpc.Channel.
         """
         self.Ping = channel.unary_unary(
-                '/example.Example/Ping',
-                request_serializer=ping__pb2.PingRequest.SerializeToString,
-                response_deserializer=ping__pb2.PongResponse.FromString,
-                _registered_method=True)
+            "/example.Example/Ping",
+            request_serializer=ping__pb2.PingRequest.SerializeToString,
+            response_deserializer=ping__pb2.PongResponse.FromString,
+            _registered_method=True,
+        )
         self.PingStream = channel.stream_stream(
-                '/example.Example/PingStream',
-                request_serializer=ping__pb2.PingRequest.SerializeToString,
-                response_deserializer=ping__pb2.PongResponse.FromString,
-                _registered_method=True)
+            "/example.Example/PingStream",
+            request_serializer=ping__pb2.PingRequest.SerializeToString,
+            response_deserializer=ping__pb2.PongResponse.FromString,
+            _registered_method=True,
+        )
 
 
 class ExampleServicer(object):
@@ -52,54 +57,57 @@ class ExampleServicer(object):
     def Ping(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def PingStream(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_ExampleServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Ping': grpc.unary_unary_rpc_method_handler(
-                    servicer.Ping,
-                    request_deserializer=ping__pb2.PingRequest.FromString,
-                    response_serializer=ping__pb2.PongResponse.SerializeToString,
-            ),
-            'PingStream': grpc.stream_stream_rpc_method_handler(
-                    servicer.PingStream,
-                    request_deserializer=ping__pb2.PingRequest.FromString,
-                    response_serializer=ping__pb2.PongResponse.SerializeToString,
-            ),
+        "Ping": grpc.unary_unary_rpc_method_handler(
+            servicer.Ping,
+            request_deserializer=ping__pb2.PingRequest.FromString,
+            response_serializer=ping__pb2.PongResponse.SerializeToString,
+        ),
+        "PingStream": grpc.stream_stream_rpc_method_handler(
+            servicer.PingStream,
+            request_deserializer=ping__pb2.PingRequest.FromString,
+            response_serializer=ping__pb2.PongResponse.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'example.Example', rpc_method_handlers)
+        "example.Example", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('example.Example', rpc_method_handlers)
+    server.add_registered_method_handlers("example.Example", rpc_method_handlers)
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class Example(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Ping(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def Ping(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/example.Example/Ping',
+            "/example.Example/Ping",
             ping__pb2.PingRequest.SerializeToString,
             ping__pb2.PongResponse.FromString,
             options,
@@ -110,23 +118,26 @@ class Example(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def PingStream(request_iterator,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def PingStream(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.stream_stream(
             request_iterator,
             target,
-            '/example.Example/PingStream',
+            "/example.Example/PingStream",
             ping__pb2.PingRequest.SerializeToString,
             ping__pb2.PongResponse.FromString,
             options,
@@ -137,4 +148,5 @@ class Example(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )

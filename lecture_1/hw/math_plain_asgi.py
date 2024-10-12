@@ -10,41 +10,46 @@ Send = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
-    assert scope["type"] == "http"
-
-    method = scope["method"]
-    path: str = scope["path"]
-
-    if method == "GET":
-        if path == "/factorial":
-            await handle_factorial(scope, receive, send)
-        elif path.startswith("/fibonacci/"):
-            await handle_fibonacci(scope, receive, send)
-        elif path == "/mean":
-            await handle_mean(scope, receive, send)
+    if scope["type"] == "lifespan":
+        while True:
+            message = await receive()
+            if message["type"] == "lifespan.startup":
+                await send({"type": "lifespan.startup.complete"})
+            elif message["type"] == "lifespan.shutdown":
+                await send({"type": "lifespan.shutdown.complete"})
+                return
+    elif scope["type"] == "http":
+        if scope["method"] == "GET":
+            path = scope.get("path")
+            if path == "/factorial":
+                await handle_factorial(scope, receive, send)
+            elif path.startswith("/fibonacci/"):
+                await handle_fibonacci(scope, receive, send)
+            elif path == "/mean":
+                await handle_mean(scope, receive, send)
+            else:
+                await send_response(send, 404, b"")
         else:
-            await send_response(send, 404, b'')
-    else:
-        await send_response(send, 404, b'')
+            await send_response(send, 404, b"")
 
 
 async def handle_factorial(scope: Scope, receive: Receive, send: Send) -> None:
-    query_str = scope.get('query_string', b'').decode()
+    query_str = scope.get("query_string", b"").decode()
     query = parse_qs(query_str)
-    n = query.get('n')
+    n = query.get("n")
 
     if not n:
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     try:
         n = int(n[0])
     except ValueError:
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     if n < 0:
-        await send_response(send, 400, b'')
+        await send_response(send, 400, b"")
         return
 
     result = factorial(n)
@@ -60,20 +65,20 @@ async def handle_fibonacci(scope: Scope, receive: Receive, send: Send) -> None:
         return a
 
     path = scope["path"]
-    n_str = path[len("/fibonacci/"):]
+    n_str = path[len("/fibonacci/") :]
 
     if not n_str:
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     try:
         n = int(n_str)
     except ValueError:
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     if n < 0:
-        await send_response(send, 400, b'')
+        await send_response(send, 400, b"")
         return
 
     result = fibonacci(n)
@@ -82,33 +87,33 @@ async def handle_fibonacci(scope: Scope, receive: Receive, send: Send) -> None:
 
 
 async def handle_mean(scope: Scope, receive: Receive, send: Send) -> None:
-    body_bytes = b''
+    body_bytes = b""
     more_body = True
 
     while more_body:
         message = await receive()
-        if message['type'] == 'http.request':
-            body_bytes += message.get('body', b'')
-            more_body = message.get('more_body', False)
+        if message["type"] == "http.request":
+            body_bytes += message.get("body", b"")
+            more_body = message.get("more_body", False)
 
     try:
         data = json.loads(body_bytes)
     except json.JSONDecodeError:
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     if not isinstance(data, list):
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     if not data:
-        await send_response(send, 400, b'')
+        await send_response(send, 400, b"")
         return
 
     try:
         numbers = [float(x) for x in data]
     except (ValueError, TypeError):
-        await send_response(send, 422, b'')
+        await send_response(send, 422, b"")
         return
 
     mean_value = sum(numbers) / len(numbers)
@@ -116,7 +121,9 @@ async def handle_mean(scope: Scope, receive: Receive, send: Send) -> None:
     await send_response(send, 200, response_body)
 
 
-async def send_response(send: Send, status_code: int, body: bytes, content_type: str = 'application/json') -> None:
+async def send_response(
+    send: Send, status_code: int, body: bytes, content_type: str = "application/json"
+) -> None:
     match status_code:
         case 400:
             result_body = json.dumps({"error": "Bad request"}).encode()
@@ -127,16 +134,18 @@ async def send_response(send: Send, status_code: int, body: bytes, content_type:
         case 200:
             result_body = body
         case _:
-            result_body = b''
-    headers = [
-        [b'content-type', content_type.encode()]
-    ]
-    await send({
-        'type': 'http.response.start',
-        'status': status_code,
-        'headers': headers,
-    })
-    await send({
-        'type': 'http.response.body',
-        'body': result_body,
-    })
+            result_body = b""
+    headers = [[b"content-type", content_type.encode()]]
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status_code,
+            "headers": headers,
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": result_body,
+        }
+    )
